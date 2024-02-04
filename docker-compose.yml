@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  cardboard-service:
+    image: cardboard:latest # Replace with your actual Docker image name
+    container_name: poopy
+    ports:
+      - "35000:35000" # Maps port 8080 inside the container to port 8080 on the host
+      - "35001:35001" # Maps port 5000 inside the container to port 5000 on the host
+    volumes:
+      - ./server-init.cfg:/cardboard/server-init.cfg # Mounts the config file from the host to the container

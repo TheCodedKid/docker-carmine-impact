@@ -1,0 +1,63 @@
+# Use Ubuntu 20.04 LTS as the base image
+FROM ubuntu:20.04
+
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update apt package list
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    wget \
+    libcurl4-openssl-dev \
+    libenet-dev \
+    git \
+    cmake \
+    libsdl2-dev \
+    # Add any other dependencies SDL2_mixer might need
+    libflac-dev \
+    libogg-dev \
+    libvorbis-dev \
+    libmpg123-dev
+
+# Download SDL2_mixer source
+WORKDIR /tmp
+RUN wget https://www.libsdl.org/projects/SDL_mixer/release/SDL2_mixer-2.0.4.tar.gz && \
+    tar -zxvf SDL2_mixer-2.0.4.tar.gz
+
+# Compile and Install SDL2_mixer
+WORKDIR /tmp/SDL2_mixer-2.0.4
+RUN ./configure && make && make install
+
+# Download SDL2_image source
+WORKDIR /tmp
+RUN wget https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.0.5.tar.gz && \
+    tar -zxvf SDL2_image-2.0.5.tar.gz
+
+# Compile and Install SDL2_image
+WORKDIR /tmp/SDL2_image-2.0.5
+RUN ./configure && make && make install
+
+# Clone the specific Git repository
+RUN git clone --recursive https://github.com/HarpNetStudios/cardboard.git /cardboard
+
+# Change working directory
+WORKDIR /cardboard
+
+# Checkout the latest tag
+RUN git checkout $(git describe --tags)
+
+# Prepare the build environment and compile the code
+RUN cmake CMakeLists.txt && make && make install
+
+# Cleanup
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# At runtime, replace the game token and start the application
+# Using `sed` to replace the token and executing the script
+CMD sed -i "s/-cOFFLINE/g" cardboard_unix && \
+    chmod +x cardboard_unix && \
+    ./cardboard_unix
+
+
+#35000, 35001
